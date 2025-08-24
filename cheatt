@@ -1,0 +1,166 @@
+-- Indo Hangout Script (No Key System, GUI Lengkap + Animasi + Close/Minimize)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+
+-- GUI utama
+local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 240, 0, 320)
+Frame.Position = UDim2.new(0.05, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.Active = true
+Frame.Draggable = true
+Frame.BorderSizePixel = 0
+
+-- Header / Title
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(0.7, 0, 0, 40)
+Title.Text = "Indo Hangout Menu"
+Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextScaled = true
+Title.BorderSizePixel = 0
+
+-- Tombol Minimize
+local MinBtn = Instance.new("TextButton", Frame)
+MinBtn.Size = UDim2.new(0.15, 0, 0, 40)
+MinBtn.Position = UDim2.new(0.7, 0, 0, 0)
+MinBtn.Text = "_"
+MinBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.TextScaled = true
+MinBtn.BorderSizePixel = 0
+
+-- Tombol Close
+local CloseBtn = Instance.new("TextButton", Frame)
+CloseBtn.Size = UDim2.new(0.15, 0, 0, 40)
+CloseBtn.Position = UDim2.new(0.85, 0, 0, 0)
+CloseBtn.Text = "X"
+CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextScaled = true
+CloseBtn.BorderSizePixel = 0
+
+-- Container isi tombol menu
+local ContentFrame = Instance.new("Frame", Frame)
+ContentFrame.Size = UDim2.new(1, 0, 1, -40)
+ContentFrame.Position = UDim2.new(0, 0, 0, 40)
+ContentFrame.BackgroundTransparency = 1
+
+-- fungsi buat tombol + hover + animasi klik
+local function makeButton(text, yPos)
+    local btn = Instance.new("TextButton", ContentFrame)
+    btn.Size = UDim2.new(1, -20, 0, 40)
+    btn.Position = UDim2.new(0, 10, 0, yPos)
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextScaled = true
+    btn.BorderSizePixel = 0
+
+    -- hover
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)}):Play()
+    end)
+
+    -- klik animasi
+    btn.MouseButton1Click:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+        task.wait(0.1)
+        TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+    end)
+
+    return btn
+end
+
+-- Minimize action
+local minimized = false
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    ContentFrame.Visible = not minimized
+    MinBtn.Text = minimized and "▢" or "_"
+end)
+
+-- Close action
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Tombol Fly
+local flyBtn = makeButton("Toggle Fly", 10)
+local flying = false
+local bodyVel, bodyGyro
+
+flyBtn.MouseButton1Click:Connect(function()
+    flying = not flying
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hum = char:FindFirstChildOfClass("Humanoid")
+
+    if flying then
+        bodyVel = Instance.new("BodyVelocity", char.PrimaryPart)
+        bodyGyro = Instance.new("BodyGyro", char.PrimaryPart)
+        bodyVel.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bodyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+        hum.PlatformStand = true
+        print("Fly ON")
+    else
+        if bodyVel then bodyVel:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        hum.PlatformStand = false
+        print("Fly OFF")
+    end
+end)
+
+-- Tombol Speed
+local speedBtn = makeButton("Toggle Speed x2", 60)
+local fast = false
+speedBtn.MouseButton1Click:Connect(function()
+    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        fast = not fast
+        hum.WalkSpeed = fast and 32 or 16
+        print("Speed: " .. hum.WalkSpeed)
+    end
+end)
+
+-- Tombol Teleport
+local tpBtn = makeButton("Teleport ke Spawn", 110)
+tpBtn.MouseButton1Click:Connect(function()
+    local char = player.Character or player.CharacterAdded:Wait()
+    if char.PrimaryPart then
+        char:SetPrimaryPartCFrame(CFrame.new(0, 10, 0))
+        print("Teleported ke spawn")
+    end
+end)
+
+-- Tombol ESP
+local espBtn = makeButton("Toggle ESP", 160)
+local espEnabled = false
+espBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player and p.Character then
+            if espEnabled then
+                local highlight = Instance.new("Highlight", p.Character)
+                highlight.Name = "ESP"
+                highlight.FillTransparency = 0.7
+                highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
+            else
+                local hl = p.Character:FindFirstChild("ESP")
+                if hl then hl:Destroy() end
+            end
+        end
+    end
+    print("ESP: " .. tostring(espEnabled))
+end)
+
+print("✅ Indo Hangout Script Loaded tanpa key (GUI + Animasi + Close/Minimize)!")
